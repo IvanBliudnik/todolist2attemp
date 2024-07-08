@@ -1,53 +1,71 @@
-import React, {useState} from 'react';
 import './App.css';
-import {ArrayTasksTypes, Todolist} from "./Todolist";
+import {Todolist} from "./Todolist";
+import {useState} from "react";
 import {v1} from "uuid";
 
+export type TaskType = {
+    id: string
+    title: string
+    isDone: boolean
+}
+
+export type FilterValuesType = 'all' | 'active' | 'completed'
+
 function App() {
-    let [tasks, setTasks] = useState<Array<ArrayTasksTypes>>([
+
+    const [tasks, setTasks] = useState<TaskType[]>([
         {id: v1(), title: 'HTML&CSS', isDone: true},
-        {id: v1(), title: 'JS', isDone: true},
+        {id: v1(), title: 'JS', isDone: false},
         {id: v1(), title: 'ReactJS', isDone: false},
-        {id: v1(), title: 'Redux', isDone: false},
-        {id: v1(), title: 'TS', isDone: false},
-        {id: v1(), title: 'RTK query', isDone: false},
     ])
 
-    const removeTask = (id: string) => {
-        //иммутабельная работа
-        const nextState = (tasks.filter(t => t.id !== id))
-        setTasks(nextState)
-        //засетали новый массив tasks который прошёл после фильтра
+    const [filter, setFilter] = useState<FilterValuesType>('all')
+
+    const changeTaskStatus = (taskId: string, isDone: boolean) => {
+        // Запомни навсегда map если меняем значения
+        // Filter если хотим найти
+        setTasks(tasks.map(el => el.id === taskId ? {...el, isDone:isDone} : el))
     }
-    const addTask = (title:string) => {
-        const newTask: ArrayTasksTypes = {
+
+    const removeTask = (taskId: string) => {
+        const filteredTasks = tasks.filter((task) => {
+            return task.id !== taskId
+        })
+        setTasks(filteredTasks)
+    }
+
+    const addTask = (title: string) => {
+        const newTask = {
             id: v1(),
             title: title,
-            isDone: false,
+            isDone: false
         }
-        //иммутабельная работа
-       const copyState = [...tasks]
-        copyState.push(newTask)
-        setTasks(copyState)
-    //    setTasks([...tasks, newTask]) краткая форма записи 29-31
+        const newTasks = [newTask, ...tasks]
+        setTasks(newTasks)
     }
-    // function addTask(title: string) {
-    //     let newTask = {
-    //         id: v1(),
-    //         title: title,
-    //         isDone: false
-    //     };
-    //     let newTasks = [newTask, ...tasks];
-    //     setTasks(newTasks);
-    // }
+
+    const changeFilter = (filter: FilterValuesType) => {
+        setFilter(filter)
+    }
+
+    let tasksForTodolist = tasks
+    if (filter === 'active') {
+        tasksForTodolist = tasks.filter(task => !task.isDone)
+    }
+
+    if (filter === 'completed') {
+        tasksForTodolist = tasks.filter(task => task.isDone)
+    }
+
     return (
         <div className="App">
             <Todolist
                 title="What to learn"
-                tasks={tasks}
+                tasks={tasksForTodolist}
                 removeTask={removeTask}
+                changeFilter={changeFilter}
                 addTask={addTask}
-                // changeFilter={changeFilter}
+                changeTaskStatus={changeTaskStatus}
             />
         </div>
     );
